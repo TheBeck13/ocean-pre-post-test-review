@@ -716,21 +716,29 @@ function renderReview() {
   const risposta  = m.risposta   || q.risposta;
   const spieg     = m.spiegazione|| q.spiegazione;
 
-  const opts = [['A',optA],['B',optB],['C',optC],['D',optD]];
+  const isFITB = (q.tipo === 'FITB');
 
-  const optsHtml = opts.map(([l,t]) => {
-    const correct = (l === risposta);
-    return `<div class="option-row ${correct?'correct':''}">
-      <span class="opt-letter">${l}.</span>
-      <span class="opt-text">${esc(t)}</span>
-      ${correct ? '<span class="opt-check">✓</span>' : ''}
-    </div>`;
-  }).join('');
+  const optsHtml = isFITB
+    ? `<div class="option-row correct fitb-answer">
+        <span class="opt-letter" style="font-size:.8rem;color:var(--muted)">Risposta</span>
+        <span class="opt-text">${esc(risposta)}</span>
+        <span class="opt-check">✓</span>
+       </div>`
+    : [['A',optA],['B',optB],['C',optC],['D',optD]].map(([l,t]) => {
+        const correct = (l === risposta);
+        return `<div class="option-row ${correct?'correct':''}">
+          <span class="opt-letter">${l}.</span>
+          <span class="opt-text">${esc(t)}</span>
+          ${correct ? '<span class="opt-check">✓</span>' : ''}
+        </div>`;
+      }).join('');
 
   // Diff originale
-  const fields = [['Domanda','domanda',q.domanda,domanda],['A','a',q.a,optA],['B','b',q.b,optB],
-    ['C','c',q.c,optC],['D','d',q.d,optD],['Risposta','risposta',q.risposta,risposta],
-    ['Spiegazione','spiegazione',q.spiegazione,spieg]];
+  const fields = isFITB
+    ? [['Domanda','domanda',q.domanda,domanda],['Risposta','risposta',q.risposta,risposta],['Spiegazione','spiegazione',q.spiegazione,spieg]]
+    : [['Domanda','domanda',q.domanda,domanda],['A','a',q.a,optA],['B','b',q.b,optB],
+       ['C','c',q.c,optC],['D','d',q.d,optD],['Risposta','risposta',q.risposta,risposta],
+       ['Spiegazione','spiegazione',q.spiegazione,spieg]];
   const diffs = fields.filter(([,,orig,eff]) => orig !== eff);
   const origHtml = diffs.length ? `
     <button id="orig-toggle" onclick="document.getElementById('orig-panel').classList.toggle('open');this.textContent=document.getElementById('orig-panel').classList.contains('open')?'▲ Nascondi originale':'▼ Mostra originale'">
@@ -758,20 +766,25 @@ function renderReview() {
       <h3>Modifica contenuto</h3>
       <div class="field-group"><label>Domanda</label>
         <textarea id="mod-domanda" rows="3" oninput="onModChange('domanda',this.value)">${esc(domanda)}</textarea></div>
-      <div class="opts-grid">
-        <div class="field-group"><label>A</label>
-          <input type="text" id="mod-a" value="${esc(optA)}" oninput="onModChange('a',this.value)"></div>
-        <div class="field-group"><label>B</label>
-          <input type="text" id="mod-b" value="${esc(optB)}" oninput="onModChange('b',this.value)"></div>
-        <div class="field-group"><label>C</label>
-          <input type="text" id="mod-c" value="${esc(optC)}" oninput="onModChange('c',this.value)"></div>
-        <div class="field-group"><label>D</label>
-          <input type="text" id="mod-d" value="${esc(optD)}" oninput="onModChange('d',this.value)"></div>
-      </div>
-      <div class="field-group"><label>Risposta corretta</label>
-        <select id="mod-risposta" onchange="onModChange('risposta',this.value)">
-          ${['A','B','C','D'].map(x=>`<option value="${x}" ${risposta===x?'selected':''}>${x}</option>`).join('')}
-        </select></div>
+      ${isFITB ? `
+        <div class="field-group"><label>Risposta</label>
+          <input type="text" id="mod-risposta-fitb" value="${esc(risposta)}" oninput="onModChange('risposta',this.value)"></div>
+      ` : `
+        <div class="opts-grid">
+          <div class="field-group"><label>A</label>
+            <input type="text" id="mod-a" value="${esc(optA)}" oninput="onModChange('a',this.value)"></div>
+          <div class="field-group"><label>B</label>
+            <input type="text" id="mod-b" value="${esc(optB)}" oninput="onModChange('b',this.value)"></div>
+          <div class="field-group"><label>C</label>
+            <input type="text" id="mod-c" value="${esc(optC)}" oninput="onModChange('c',this.value)"></div>
+          <div class="field-group"><label>D</label>
+            <input type="text" id="mod-d" value="${esc(optD)}" oninput="onModChange('d',this.value)"></div>
+        </div>
+        <div class="field-group"><label>Risposta corretta</label>
+          <select id="mod-risposta" onchange="onModChange('risposta',this.value)">
+            ${['A','B','C','D'].map(x=>`<option value="${x}" ${risposta===x?'selected':''}>${x}</option>`).join('')}
+          </select></div>
+      `}
       <div class="field-group"><label>Spiegazione</label>
         <textarea id="mod-spiegazione" rows="3" oninput="onModChange('spiegazione',this.value)">${esc(spieg)}</textarea></div>
       <button class="btn btn-secondary btn-sm" onclick="clearMods()">Ripristina originale</button>
